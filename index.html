@@ -260,22 +260,42 @@ function showError(msg){
 }
 function clearError(){ errorEl.style.display = 'none'; }
 
+let isProcessing = false;
+
 function handleFile(file){
+  if (isProcessing) return;
+  isProcessing = true;
   clearError();
   fileNameEl.textContent = '已選擇：' + file.name;
   const reader = new FileReader();
   reader.onload = evt => {
+    let wb, parsed;
     try{
       const data = new Uint8Array(evt.target.result);
-      const wb = XLSX.read(data, {type:'array', cellDates:true});
-      const parsed = parseWorkbook(wb);
+      wb = XLSX.read(data, {type:'array', cellDates:true});
+      parsed = parseWorkbook(wb);
+    }catch(err){
+      console.error(err);
+      mainEl.classList.remove('ready');
+      showError('讀取失敗，請確認上傳的是「JOLLY KIDS 內帳自動化系統」試算表（需含月報表、活動報表分頁）。');
+      isProcessing = false;
+      fileInput.value = '';
+      return;
+    }
+    try{
       render(parsed);
     }catch(err){
       console.error(err);
-      showError('讀取失敗，請確認上傳的是「JOLLY KIDS 內帳自動化系統」試算表（需含月報表、活動報表分頁）。');
+      showError('資料已讀取成功，但畫面顯示時發生錯誤，請重新整理頁面後再上傳一次。');
     }
+    isProcessing = false;
+    fileInput.value = '';
   };
-  reader.onerror = () => showError('檔案讀取失敗，請重新上傳。');
+  reader.onerror = () => {
+    showError('檔案讀取失敗，請重新上傳。');
+    isProcessing = false;
+    fileInput.value = '';
+  };
   reader.readAsArrayBuffer(file);
 }
 
