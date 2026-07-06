@@ -7,7 +7,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Work+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"
+        onerror="this.onerror=null; var s=document.createElement('script'); s.src='https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js'; document.head.appendChild(s);"></script>
 <style>
   :root{
     --ink:#1B2420;
@@ -391,9 +392,9 @@ let trendChartInstance = null;
 
 function render({monthly, activities}){
   mainEl.classList.add('ready');
-  renderSummary(monthly);
-  renderTrend(monthly);
-  renderTimeline(activities);
+  try { renderSummary(monthly); } catch(e) { console.error('renderSummary failed', e); }
+  try { renderTrend(monthly); } catch(e) { console.error('renderTrend failed', e); }
+  try { renderTimeline(activities); } catch(e) { console.error('renderTimeline failed', e); }
 }
 
 function fmtMoney(n){
@@ -412,7 +413,15 @@ function renderSummary(monthly){
 }
 
 function renderTrend(monthly){
-  const ctx = document.getElementById('trendChart').getContext('2d');
+  const canvas = document.getElementById('trendChart');
+  if (typeof Chart === 'undefined') {
+    canvas.replaceWith(Object.assign(document.createElement('div'), {
+      style: 'padding:24px;text-align:center;color:#E2583F;font-size:13px;',
+      textContent: '圖表元件載入失敗（可能是網路阻擋了 cdnjs.cloudflare.com），請重新整理頁面再試一次。若持續發生，請檢查網路是否封鎖此網域。'
+    }));
+    return;
+  }
+  const ctx = canvas.getContext('2d');
   if(trendChartInstance) trendChartInstance.destroy();
   trendChartInstance = new Chart(ctx, {
     type: 'line',
