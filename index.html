@@ -168,6 +168,56 @@
   footer{max-width:980px; margin:0 auto; padding:0 24px 60px; font-size:12px; color:var(--muted); text-align:center;}
   footer .lock{margin-bottom:4px;}
 
+  /* ===== New tabs: mini stat row ===== */
+  .mini-stat-row{display:flex; gap:14px; flex-wrap:wrap; margin-bottom:20px;}
+  .mini-stat{
+    flex:1 1 150px; background:#F8F6EE; border:1px solid var(--line); border-radius:10px;
+    padding:14px 16px;
+  }
+  .mini-stat .label{font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; margin-bottom:6px;}
+  .mini-stat .value{font-family:'IBM Plex Mono',monospace; font-size:18px; font-weight:600; color:var(--ink);}
+  .mini-stat .value.warn{color:var(--coral);}
+  .mini-stat .value.good{color:var(--teal);}
+
+  /* ===== AR/AP tables ===== */
+  .arap-tables{display:grid; grid-template-columns:1fr 1fr; gap:20px;}
+  @media (max-width:700px){ .arap-tables{grid-template-columns:1fr;} }
+  .arap-block h4{font-size:14px; margin:0 0 10px; font-family:'Fredoka',sans-serif;}
+  table.simple{width:100%; border-collapse:collapse; font-size:13px;}
+  table.simple th{
+    text-align:left; font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--muted);
+    text-transform:uppercase; letter-spacing:.04em; padding:6px 8px; border-bottom:2px solid var(--line);
+  }
+  table.simple td{padding:7px 8px; border-bottom:1px solid var(--line); font-family:'IBM Plex Mono',monospace;}
+  table.simple td.label-cell{font-family:'Work Sans',sans-serif;}
+  table.simple tr:last-child td{font-weight:700; border-bottom:none; border-top:2px solid var(--line);}
+
+  /* ===== Ranking list ===== */
+  .rank-row{
+    display:flex; align-items:center; gap:14px; padding:12px 14px;
+    border:1px solid var(--line); border-radius:10px; margin-bottom:8px; background:var(--panel);
+  }
+  .rank-num{
+    flex:0 0 32px; height:32px; border-radius:50%; background:var(--forest); color:#fff;
+    display:flex; align-items:center; justify-content:center; font-family:'IBM Plex Mono',monospace;
+    font-weight:700; font-size:13px;
+  }
+  .rank-row.loss .rank-num{background:var(--coral);}
+  .rank-name{flex:1 1 auto; font-size:14px; font-weight:600; min-width:120px;}
+  .rank-metrics{display:flex; gap:16px; flex-wrap:wrap; font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--muted);}
+  .rank-metrics b{color:var(--ink); display:block; font-size:13px;}
+
+  /* ===== Health checklist ===== */
+  .health-row{
+    display:flex; align-items:flex-start; gap:12px; padding:12px 14px;
+    border-bottom:1px solid var(--line);
+  }
+  .health-row:last-child{border-bottom:none;}
+  .health-icon{font-size:16px; flex:0 0 auto;}
+  .health-body strong{display:block; font-size:13px; margin-bottom:2px;}
+  .health-body span{font-size:12px; color:var(--muted);}
+  .health-row.warn .health-body strong{color:var(--coral);}
+
   @media (max-width:640px){
     header.hero{padding:36px 16px 52px;}
     .upload-wrap{padding:0 16px 32px;}
@@ -181,7 +231,7 @@
   <div class="hero-inner">
     <div class="eyebrow">JOLLY KIDS · 內帳自動化系統</div>
     <h1>上傳一份表，看懂全年收支</h1>
-    <p>把「JOLLY KIDS 內帳自動化系統」試算表拖進來，立刻轉成月報趨勢折線圖，以及活動時間軸。所有運算都在你的瀏覽器裡完成，檔案不會上傳到任何伺服器。</p>
+    <p>把「JOLLY KIDS 內帳自動化系統」試算表拖進來，立刻轉成月報趨勢、活動時間軸、現金跑道、應收應付、預算對比、成本結構、活動排行、資料健檢共8種視圖。所有運算都在你的瀏覽器裡完成，檔案不會上傳到任何伺服器。</p>
   </div>
 </header>
 
@@ -207,6 +257,12 @@
   <div class="tabs">
     <button class="tab-btn active" data-tab="trend">月報表趨勢折線圖</button>
     <button class="tab-btn" data-tab="timeline">活動時間軸</button>
+    <button class="tab-btn" data-tab="runway">現金流量預測</button>
+    <button class="tab-btn" data-tab="arap">應收應付帳款</button>
+    <button class="tab-btn" data-tab="budget">預算對比</button>
+    <button class="tab-btn" data-tab="coststruct">成本結構分析</button>
+    <button class="tab-btn" data-tab="rank">活動獲利排行榜</button>
+    <button class="tab-btn" data-tab="health">資料健康檢查</button>
   </div>
 
   <div class="tab-panel active" id="tab-trend">
@@ -224,6 +280,57 @@
       <div class="ruler-wrap"><div class="ruler" id="ruler"></div></div>
       <div class="detail-card" id="detailCard"></div>
       <div class="unplaced" id="unplaced"></div>
+    </div>
+  </div>
+
+  <div class="tab-panel" id="tab-runway">
+    <div class="panel-card">
+      <h3>現金流量預測 — 燒錢率與跑道</h3>
+      <div class="sub">依「現金流量預測」分頁計算，抓最新結算月份的現金水位，推算還能撐幾個月</div>
+      <div id="runwayCards" class="mini-stat-row"></div>
+      <canvas id="runwayChart" height="100"></canvas>
+    </div>
+  </div>
+
+  <div class="tab-panel" id="tab-arap">
+    <div class="panel-card">
+      <h3>應收應付帳款</h3>
+      <div class="sub">依「是否核銷」欄位判斷尚未實際進出的款項，並依帳齡分類</div>
+      <div id="arapCards" class="mini-stat-row"></div>
+      <div id="arapTables" class="arap-tables"></div>
+    </div>
+  </div>
+
+  <div class="tab-panel" id="tab-budget">
+    <div class="panel-card">
+      <h3>預算 vs 實際</h3>
+      <div class="sub">依「預算對比」分頁的月度總覽，比較收入與支出的預算達成狀況</div>
+      <canvas id="budgetChart" height="110"></canvas>
+    </div>
+  </div>
+
+  <div class="tab-panel" id="tab-coststruct">
+    <div class="panel-card">
+      <h3>成本結構分析</h3>
+      <div class="sub">拆解固定成本與變動成本比例，並顯示損益兩平點推估</div>
+      <div id="breakevenCards" class="mini-stat-row"></div>
+      <canvas id="costStructChart" height="110"></canvas>
+    </div>
+  </div>
+
+  <div class="tab-panel" id="tab-rank">
+    <div class="panel-card">
+      <h3>活動獲利排行榜</h3>
+      <div class="sub">依結案盈餘由高到低排序，找出最值得投入資源的活動類型</div>
+      <div id="rankList"></div>
+    </div>
+  </div>
+
+  <div class="tab-panel" id="tab-health">
+    <div class="panel-card">
+      <h3>資料健康檢查</h3>
+      <div class="sub">自動掃描母資料，抓出常見的資料一致性問題</div>
+      <div id="healthList"></div>
     </div>
   </div>
 </main>
@@ -384,17 +491,188 @@ function extractDate(name){
 function parseWorkbook(wb){
   const monthly = parseMonthly(wb);
   const activities = parseActivities(wb);
-  return {monthly, activities};
+  const runway = safeParse(() => parseRunway(wb));
+  const arap = safeParse(() => parseArAp(wb));
+  const budget = safeParse(() => parseBudget(wb));
+  const costStruct = safeParse(() => parseCostStruct(wb));
+  const rank = safeParse(() => parseActivityRank(wb));
+  const health = safeParse(() => parseHealth(wb));
+  return {monthly, activities, runway, arap, budget, costStruct, rank, health};
+}
+
+function safeParse(fn){
+  try { return fn(); } catch(e){ console.error('optional sheet parse failed', e); return null; }
+}
+
+function findLabelRow(rows, keyword){
+  for(let i=0;i<rows.length;i++){
+    if(rows[i] && rows[i][0] && String(rows[i][0]).includes(keyword)) return i;
+  }
+  return -1;
+}
+function findAllLabelRows(rows, keyword){
+  const out = [];
+  for(let i=0;i<rows.length;i++){
+    if(rows[i] && rows[i][0] && String(rows[i][0]) === keyword) out.push(i);
+  }
+  return out;
+}
+
+// ---------- 現金流量預測 ----------
+function parseRunway(wb){
+  const rows = sheetRows(wb, '現金流量預測');
+  if(!rows) return null;
+  const cashRow = findLabelRow(rows, '目前現金水位');
+  const burnRow = findLabelRow(rows, '月燒錢率');
+  const runwayRow = findLabelRow(rows, '預估還能撐幾個月');
+  const bottomRow = findLabelRow(rows, '預估現金見底月份');
+  const projHeaderRow = findLabelRow(rows, '月數後');
+  if(cashRow === -1) return null;
+  const cash = Number(rows[cashRow][3]) || 0;
+  const burn = burnRow>-1 ? (Number(rows[burnRow][3]) || 0) : 0;
+  const runwayRaw = runwayRow>-1 ? rows[runwayRow][3] : null;
+  const runwayNum = typeof runwayRaw === 'number' ? runwayRaw : null;
+  const runwayText = typeof runwayRaw === 'string' ? runwayRaw : null;
+  const bottomDate = bottomRow>-1 ? rows[bottomRow][3] : null;
+  const projection = [];
+  if(projHeaderRow>-1){
+    for(let i=projHeaderRow+1;i<rows.length;i++){
+      const r = rows[i];
+      if(!r || r[0]==null || r[2]==null) break;
+      projection.push({ n: r[0], label: r[1], value: Number(r[2])||0 });
+    }
+  }
+  return { cash, burn, runwayNum, runwayText, bottomDate, projection };
+}
+
+// ---------- 應收應付帳款 ----------
+function parseArAp(wb){
+  const rows = sheetRows(wb, '應收應付帳款');
+  if(!rows) return null;
+  const arTotalRow = findLabelRow(rows, '應收帳款總額');
+  const apTotalRow = findLabelRow(rows, '應付帳款總額');
+  if(arTotalRow === -1 || apTotalRow === -1) return null;
+  const arTotal = Number(rows[arTotalRow][3]) || 0;
+  const apTotal = Number(rows[apTotalRow][3]) || 0;
+  const bucketLabels = ['30天內','30~60天','60~90天','90天以上','執行日期未填（無法判斷帳齡）'];
+  const arBuckets = [], apBuckets = [];
+  bucketLabels.forEach(label => {
+    const matches = findAllLabelRows(rows, label);
+    if(matches.length>=1) arBuckets.push({ label, amount: Number(rows[matches[0]][1])||0, count: Number(rows[matches[0]][2])||0 });
+    if(matches.length>=2) apBuckets.push({ label, amount: Number(rows[matches[1]][1])||0, count: Number(rows[matches[1]][2])||0 });
+  });
+  return { arTotal, apTotal, arBuckets, apBuckets };
+}
+
+// ---------- 預算對比 ----------
+function parseBudget(wb){
+  const rows = sheetRows(wb, '預算對比');
+  if(!rows) return null;
+  let headerRow = -1;
+  for(let i=0;i<rows.length;i++){
+    if(rows[i] && rows[i][0] === '月份'){ headerRow = i; break; }
+  }
+  if(headerRow === -1) return null;
+  const months = [];
+  for(let i=headerRow+1;i<rows.length;i++){
+    const r = rows[i];
+    if(!r || typeof r[0] !== 'number') break;
+    months.push({
+      m: r[0],
+      incBudget: Number(r[1])||0, incActual: Number(r[2])||0,
+      expBudget: Number(r[4])||0, expActual: Number(r[5])||0,
+      netBudget: Number(r[7])||0, netActual: Number(r[8])||0,
+    });
+  }
+  return { months };
+}
+
+// ---------- 成本結構分析 ----------
+function parseCostStruct(wb){
+  const rows = sheetRows(wb, '成本結構分析');
+  if(!rows) return null;
+  const fixedRow = findLabelRow(rows, '固定支出合計');
+  const varRow = findLabelRow(rows, '變動(一次性)支出合計');
+  const beRow = findLabelRow(rows, '損益兩平月營收');
+  const avgFixRow = findLabelRow(rows, '分析區間內平均月固定成本');
+  const varRateRow = findLabelRow(rows, '平均變動成本率');
+  if(fixedRow === -1 || varRow === -1) return null;
+  const months = [];
+  for(let m=1;m<=12;m++){
+    months.push({
+      m,
+      fixed: Number(rows[fixedRow][m])||0,
+      variable: Number(rows[varRow][m])||0,
+    });
+  }
+  const breakeven = beRow>-1 ? rows[beRow][3] : null;
+  const avgFixed = avgFixRow>-1 ? (Number(rows[avgFixRow][3])||0) : 0;
+  const varRate = varRateRow>-1 ? (Number(rows[varRateRow][3])||0) : 0;
+  return { months, breakeven: typeof breakeven==='number'?breakeven:null, breakevenText: typeof breakeven==='string'?breakeven:null, avgFixed, varRate };
+}
+
+// ---------- 活動獲利排行榜 ----------
+function parseActivityRank(wb){
+  const rows = sheetRows(wb, '活動獲利排行榜');
+  if(!rows) return null;
+  let headerRow = -1;
+  for(let i=0;i<rows.length;i++){
+    if(rows[i] && rows[i][1] === '活動名稱'){ headerRow = i; break; }
+  }
+  if(headerRow === -1) return null;
+  const list = [];
+  for(let i=headerRow+1;i<rows.length;i++){
+    const r = rows[i];
+    if(!r || !r[1]) break;
+    list.push({
+      rank: typeof r[0]==='number' ? r[0] : 999,
+      name: r[1],
+      income: Number(r[2])||0,
+      expense: Number(r[3])||0,
+      net: Number(r[4])||0,
+      margin: typeof r[5]==='number' ? r[5] : null,
+    });
+  }
+  list.sort((a,b) => a.rank - b.rank);
+  return { list };
+}
+
+// ---------- 資料健康檢查 ----------
+function parseHealth(wb){
+  const rows = sheetRows(wb, '資料健康檢查');
+  if(!rows) return null;
+  let headerRow = -1;
+  for(let i=0;i<rows.length;i++){
+    if(rows[i] && rows[i][0] === '檢查項目'){ headerRow = i; break; }
+  }
+  if(headerRow === -1) return null;
+  const list = [];
+  for(let i=headerRow+1;i<rows.length;i++){
+    const r = rows[i];
+    if(!r || !r[0]) break;
+    list.push({ label: r[0], count: Number(r[1])||0, status: r[2] || '', desc: r[3] || '' });
+  }
+  return { list };
 }
 
 // ---------- Rendering ----------
 let trendChartInstance = null;
 
-function render({monthly, activities}){
+function render({monthly, activities, runway, arap, budget, costStruct, rank, health}){
   mainEl.classList.add('ready');
   try { renderSummary(monthly); } catch(e) { console.error('renderSummary failed', e); }
   try { renderTrend(monthly); } catch(e) { console.error('renderTrend failed', e); }
   try { renderTimeline(activities); } catch(e) { console.error('renderTimeline failed', e); }
+  try { renderRunway(runway); } catch(e) { console.error('renderRunway failed', e); }
+  try { renderArAp(arap); } catch(e) { console.error('renderArAp failed', e); }
+  try { renderBudget(budget); } catch(e) { console.error('renderBudget failed', e); }
+  try { renderCostStruct(costStruct); } catch(e) { console.error('renderCostStruct failed', e); }
+  try { renderRank(rank); } catch(e) { console.error('renderRank failed', e); }
+  try { renderHealth(health); } catch(e) { console.error('renderHealth failed', e); }
+}
+
+function emptyState(el, msg){
+  el.innerHTML = `<div style="padding:20px;color:var(--muted);font-size:13px;">${msg}</div>`;
 }
 
 function fmtMoney(n){
@@ -544,6 +822,184 @@ function renderTimeline(activities){
       </div>
     `;
   }
+}
+
+function chartGuard(canvas, msg){
+  if (typeof Chart === 'undefined') {
+    canvas.replaceWith(Object.assign(document.createElement('div'), {
+      style: 'padding:24px;text-align:center;color:#E2583F;font-size:13px;',
+      textContent: msg || '圖表元件載入失敗，請重新整理頁面再試一次。'
+    }));
+    return false;
+  }
+  return true;
+}
+
+// ---------- 現金流量預測 ----------
+let runwayChartInstance = null;
+function renderRunway(data){
+  const cardsEl = document.getElementById('runwayCards');
+  const canvas = document.getElementById('runwayChart');
+  if(!data){ emptyState(cardsEl, '找不到「現金流量預測」分頁，此功能需要較新版本的試算表。'); return; }
+  const runwayDisplay = data.runwayNum!=null ? data.runwayNum.toFixed(1)+' 個月' : (data.runwayText || '—');
+  cardsEl.innerHTML = `
+    <div class="mini-stat"><div class="label">目前現金水位</div><div class="value">${fmtMoney(data.cash)}</div></div>
+    <div class="mini-stat"><div class="label">月燒錢率</div><div class="value ${data.burn>0?'warn':'good'}">${data.burn>0?fmtMoney(data.burn):'現金流為正'}</div></div>
+    <div class="mini-stat"><div class="label">預估可撐跑道</div><div class="value ${data.burn>0?'warn':'good'}">${runwayDisplay}</div></div>
+  `;
+  if(!data.projection.length){ canvas.replaceWith(document.createElement('div')); return; }
+  if(!chartGuard(canvas)) return;
+  const ctx = canvas.getContext('2d');
+  if(runwayChartInstance) runwayChartInstance.destroy();
+  runwayChartInstance = new Chart(ctx, {
+    type:'line',
+    data:{
+      labels: data.projection.map(p=>p.label),
+      datasets:[{
+        label:'推估現金水位', data: data.projection.map(p=>p.value),
+        borderColor:'#223A34', backgroundColor:'rgba(34,58,52,.08)',
+        tension:.3, fill:true, pointRadius:3, borderWidth:2.5,
+      }]
+    },
+    options:{
+      responsive:true,
+      plugins:{ legend:{display:false}, tooltip:{callbacks:{label:c=>fmtMoney(c.raw)}} },
+      scales:{
+        y:{ ticks:{callback:v=>'NT$'+(v/1000)+'k', font:{family:"'IBM Plex Mono',monospace",size:11}}, grid:{color:'#E4E9DE'} },
+        x:{ ticks:{font:{family:"'IBM Plex Mono',monospace",size:11}}, grid:{display:false} }
+      }
+    }
+  });
+}
+
+// ---------- 應收應付帳款 ----------
+function renderArAp(data){
+  const cardsEl = document.getElementById('arapCards');
+  const tablesEl = document.getElementById('arapTables');
+  if(!data){ emptyState(cardsEl, '找不到「應收應付帳款」分頁，此功能需要較新版本的試算表。'); tablesEl.innerHTML=''; return; }
+  const net = data.arTotal - data.apTotal;
+  cardsEl.innerHTML = `
+    <div class="mini-stat"><div class="label">應收帳款總額</div><div class="value">${fmtMoney(data.arTotal)}</div></div>
+    <div class="mini-stat"><div class="label">應付帳款總額</div><div class="value">${fmtMoney(data.apTotal)}</div></div>
+    <div class="mini-stat"><div class="label">淨部位（應收-應付）</div><div class="value ${net<0?'warn':'good'}">${fmtMoney(net)}</div></div>
+  `;
+  const buildTable = (title, buckets) => `
+    <div class="arap-block">
+      <h4>${title}</h4>
+      <table class="simple">
+        <tr><th>帳齡</th><th>金額</th><th>筆數</th></tr>
+        ${buckets.map(b=>`<tr><td class="label-cell">${b.label}</td><td>${fmtMoney(b.amount)}</td><td>${b.count}</td></tr>`).join('')}
+      </table>
+    </div>`;
+  tablesEl.innerHTML = buildTable('應收帳款帳齡', data.arBuckets) + buildTable('應付帳款帳齡', data.apBuckets);
+}
+
+// ---------- 預算對比 ----------
+let budgetChartInstance = null;
+function renderBudget(data){
+  const canvas = document.getElementById('budgetChart');
+  if(!data || !data.months.length){
+    canvas.replaceWith(Object.assign(document.createElement('div'), {
+      style:'padding:24px;text-align:center;color:var(--muted);font-size:13px;',
+      textContent:'找不到「預算對比」分頁，或尚未填寫任何預算資料。'
+    }));
+    return;
+  }
+  if(!chartGuard(canvas)) return;
+  const ctx = canvas.getContext('2d');
+  if(budgetChartInstance) budgetChartInstance.destroy();
+  budgetChartInstance = new Chart(ctx, {
+    type:'bar',
+    data:{
+      labels: data.months.map(m=>m.m+'月'),
+      datasets:[
+        { label:'收入預算', data:data.months.map(m=>m.incBudget), backgroundColor:'rgba(30,138,138,.25)', borderColor:'#1E8A8A', borderWidth:1.5 },
+        { label:'收入實際', data:data.months.map(m=>m.incActual), backgroundColor:'#1E8A8A' },
+        { label:'支出預算', data:data.months.map(m=>m.expBudget), backgroundColor:'rgba(226,88,63,.25)', borderColor:'#E2583F', borderWidth:1.5 },
+        { label:'支出實際', data:data.months.map(m=>m.expActual), backgroundColor:'#E2583F' },
+      ]
+    },
+    options:{
+      responsive:true,
+      plugins:{ legend:{position:'bottom', labels:{font:{family:"'Work Sans',sans-serif",size:11}, boxWidth:10}},
+        tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${fmtMoney(c.raw)}`}} },
+      scales:{
+        y:{ ticks:{callback:v=>'NT$'+(v/1000)+'k', font:{family:"'IBM Plex Mono',monospace",size:11}}, grid:{color:'#E4E9DE'} },
+        x:{ ticks:{font:{family:"'IBM Plex Mono',monospace",size:11}}, grid:{display:false} }
+      }
+    }
+  });
+}
+
+// ---------- 成本結構分析 ----------
+let costStructChartInstance = null;
+function renderCostStruct(data){
+  const cardsEl = document.getElementById('breakevenCards');
+  const canvas = document.getElementById('costStructChart');
+  if(!data){ emptyState(cardsEl, '找不到「成本結構分析」分頁，此功能需要較新版本的試算表。'); return; }
+  const beDisplay = data.breakeven!=null ? fmtMoney(data.breakeven) : (data.breakevenText || '—');
+  cardsEl.innerHTML = `
+    <div class="mini-stat"><div class="label">平均月固定成本</div><div class="value">${fmtMoney(data.avgFixed)}</div></div>
+    <div class="mini-stat"><div class="label">平均變動成本率</div><div class="value">${(data.varRate*100).toFixed(1)}%</div></div>
+    <div class="mini-stat"><div class="label">損益兩平月營收</div><div class="value warn">${beDisplay}</div></div>
+  `;
+  if(!chartGuard(canvas)) return;
+  const ctx = canvas.getContext('2d');
+  if(costStructChartInstance) costStructChartInstance.destroy();
+  costStructChartInstance = new Chart(ctx, {
+    type:'bar',
+    data:{
+      labels: data.months.map(m=>m.m+'月'),
+      datasets:[
+        { label:'固定支出', data:data.months.map(m=>m.fixed), backgroundColor:'#223A34', stack:'s' },
+        { label:'變動支出', data:data.months.map(m=>m.variable), backgroundColor:'#F5B942', stack:'s' },
+      ]
+    },
+    options:{
+      responsive:true,
+      plugins:{ legend:{position:'bottom', labels:{font:{family:"'Work Sans',sans-serif",size:11}, boxWidth:10}},
+        tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${fmtMoney(c.raw)}`}} },
+      scales:{
+        y:{ stacked:true, ticks:{callback:v=>'NT$'+(v/1000)+'k', font:{family:"'IBM Plex Mono',monospace",size:11}}, grid:{color:'#E4E9DE'} },
+        x:{ stacked:true, ticks:{font:{family:"'IBM Plex Mono',monospace",size:11}}, grid:{display:false} }
+      }
+    }
+  });
+}
+
+// ---------- 活動獲利排行榜 ----------
+function renderRank(data){
+  const el = document.getElementById('rankList');
+  if(!data || !data.list.length){ emptyState(el, '找不到「活動獲利排行榜」分頁，此功能需要較新版本的試算表。'); return; }
+  el.innerHTML = data.list.map(a => `
+    <div class="rank-row ${a.net<0?'loss':''}">
+      <div class="rank-num">${a.rank}</div>
+      <div class="rank-name">${a.name}</div>
+      <div class="rank-metrics">
+        <div>收入<b>${fmtMoney(a.income)}</b></div>
+        <div>支出<b>${fmtMoney(a.expense)}</b></div>
+        <div>結案盈餘<b style="color:${a.net<0?'#E2583F':'#1E8A8A'}">${fmtMoney(a.net)}</b></div>
+        <div>獲利率<b>${a.margin!=null ? (a.margin*100).toFixed(1)+'%' : '—'}</b></div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ---------- 資料健康檢查 ----------
+function renderHealth(data){
+  const el = document.getElementById('healthList');
+  if(!data || !data.list.length){ emptyState(el, '找不到「資料健康檢查」分頁，此功能需要較新版本的試算表。'); return; }
+  el.innerHTML = data.list.map(h => {
+    const isWarn = h.status.includes('⚠️') || h.count>0;
+    return `
+    <div class="health-row ${isWarn?'warn':''}">
+      <div class="health-icon">${isWarn?'⚠️':'✅'}</div>
+      <div class="health-body">
+        <strong>${h.label}${h.count>0?`（${h.count}筆）`:''}</strong>
+        <span>${h.desc}</span>
+      </div>
+    </div>`;
+  }).join('');
 }
 
 // ---------- Tabs ----------
